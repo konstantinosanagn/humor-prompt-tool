@@ -17,22 +17,20 @@ export default async function FlavorsPage({
 
   const supabase = createAdminClient();
 
-  // Get total count
   let countQuery = supabase
     .from("humor_flavors")
     .select("*", { count: "exact", head: true });
   if (q) countQuery = countQuery.ilike("slug", `%${q}%`);
-  const { count } = await countQuery;
-  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
-  // Get flavors
-  let query = supabase
+  let dataQuery = supabase
     .from("humor_flavors")
     .select("id, slug, description, created_datetime_utc")
     .order("id", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
-  if (q) query = query.ilike("slug", `%${q}%`);
-  const { data: flavors } = await query;
+  if (q) dataQuery = dataQuery.ilike("slug", `%${q}%`);
+
+  const [{ count }, { data: flavors }] = await Promise.all([countQuery, dataQuery]);
+  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
   // Get step counts
   const flavorIds = (flavors ?? []).map((f) => f.id);

@@ -15,29 +15,19 @@ export default async function FlavorDetailPage({
   const flavorId = Number(id);
   const supabase = createAdminClient();
 
-  // Fetch flavor
-  const { data: flavor } = await supabase
-    .from("humor_flavors")
-    .select("id, slug, description")
-    .eq("id", flavorId)
-    .single();
-
-  if (!flavor) notFound();
-
-  // Fetch steps + lookups in parallel
-  const [stepsRes, modelsRes, inputTypesRes, outputTypesRes, stepTypesRes, imageSetsRes] =
+  const [flavorRes, stepsRes, modelsRes, inputTypesRes, outputTypesRes, stepTypesRes, imageSetsRes] =
     await Promise.all([
-      supabase
-        .from("humor_flavor_steps")
-        .select("*")
-        .eq("humor_flavor_id", flavorId)
-        .order("order_by"),
+      supabase.from("humor_flavors").select("id, slug, description").eq("id", flavorId).single(),
+      supabase.from("humor_flavor_steps").select("*").eq("humor_flavor_id", flavorId).order("order_by"),
       supabase.from("llm_models").select("id, name, llm_provider_id, is_temperature_supported"),
       supabase.from("llm_input_types").select("id, slug, description"),
       supabase.from("llm_output_types").select("id, slug, description"),
       supabase.from("humor_flavor_step_types").select("id, slug, description"),
       supabase.from("study_image_sets").select("id, slug, description"),
     ]);
+
+  const flavor = flavorRes.data;
+  if (!flavor) notFound();
 
   // Fetch images for all image sets server-side (avoids RLS issues on client)
   const setIds = (imageSetsRes.data ?? []).map((s) => s.id);

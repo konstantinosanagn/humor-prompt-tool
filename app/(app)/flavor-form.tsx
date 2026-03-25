@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Modal from "@/app/components/modal";
 import { createFlavor, updateFlavor } from "./actions";
 
@@ -10,7 +10,6 @@ interface FlavorFormProps {
 }
 
 export default function FlavorForm({ flavor, onClose }: FlavorFormProps) {
-  const formRef = useRef<HTMLFormElement>(null);
   const [pending, setPending] = useState(false);
 
   const handleSubmit = async (formData: FormData) => {
@@ -27,7 +26,7 @@ export default function FlavorForm({ flavor, onClose }: FlavorFormProps) {
 
   return (
     <Modal onClose={onClose}>
-      <form ref={formRef} action={handleSubmit} className="space-y-4">
+      <form action={handleSubmit} className="space-y-4">
         <h2 className="font-head text-xl uppercase tracking-tight">
           {flavor ? "Edit Flavor" : "New Flavor"}
         </h2>

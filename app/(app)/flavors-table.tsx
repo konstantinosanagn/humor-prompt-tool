@@ -102,7 +102,7 @@ export default function FlavorsTable({
         </table>
       </div>
 
-      <Pagination basePath="/" page={page} totalPages={totalPages} q={q} />
+      <Pagination basePath="/" page={page} totalPages={totalPages} extraParams={q ? { q } : undefined} />
 
       {editing !== null && (
         <FlavorForm

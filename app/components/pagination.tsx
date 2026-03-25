@@ -4,18 +4,20 @@ export default function Pagination({
   basePath,
   page,
   totalPages,
-  q,
+  extraParams,
 }: {
   basePath: string;
   page: number;
   totalPages: number;
-  q?: string;
+  extraParams?: Record<string, string>;
 }) {
   if (totalPages <= 1) return null;
 
   const buildHref = (p: number) => {
     const params = new URLSearchParams();
-    if (q) params.set("q", q);
+    if (extraParams) {
+      for (const [k, v] of Object.entries(extraParams)) params.set(k, v);
+    }
     params.set("page", String(p));
     return `${basePath}?${params.toString()}`;
   };

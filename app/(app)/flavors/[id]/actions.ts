@@ -1,14 +1,8 @@
 "use server";
 
 import { createAdminClient } from "@/app/lib/supabase/admin";
-import { createClient } from "@/app/lib/supabase/server";
+import { getCurrentUserId } from "@/app/lib/auth";
 import { revalidatePath } from "next/cache";
-
-async function getCurrentUserId() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id ?? null;
-}
 
 export async function updateFlavorDetail(formData: FormData) {
   const id = Number(formData.get("id"));
@@ -95,13 +89,12 @@ export async function deleteStep(formData: FormData) {
     .eq("humor_flavor_id", flavorId)
     .order("order_by");
 
-  if (remaining) {
-    for (let i = 0; i < remaining.length; i++) {
-      await supabase
-        .from("humor_flavor_steps")
-        .update({ order_by: i + 1, modified_by_user_id: userId })
-        .eq("id", remaining[i].id);
-    }
+  if (remaining && remaining.length > 0) {
+    await Promise.all(
+      remaining.map((r, i) =>
+        supabase.from("humor_flavor_steps").update({ order_by: i + 1, modified_by_user_id: userId }).eq("id", r.id)
+      )
+    );
   }
 
   revalidatePath(`/flavors/${flavorId}`);
@@ -111,12 +104,11 @@ export async function reorderSteps(flavorId: number, orderedStepIds: number[]) {
   const userId = await getCurrentUserId();
   const supabase = createAdminClient();
 
-  for (let i = 0; i < orderedStepIds.length; i++) {
-    await supabase
-      .from("humor_flavor_steps")
-      .update({ order_by: i + 1, modified_by_user_id: userId })
-      .eq("id", orderedStepIds[i]);
-  }
+  await Promise.all(
+    orderedStepIds.map((stepId, i) =>
+      supabase.from("humor_flavor_steps").update({ order_by: i + 1, modified_by_user_id: userId }).eq("id", stepId)
+    )
+  );
 
   revalidatePath(`/flavors/${flavorId}`);
 }

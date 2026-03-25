@@ -120,7 +120,7 @@ export default async function CaptionsPage({
         ))}
       </div>
 
-      <Pagination basePath="/captions" page={page} totalPages={totalPages} q={flavorFilter ? `flavor=${flavorFilter}` : undefined} />
+      <Pagination basePath="/captions" page={page} totalPages={totalPages} extraParams={flavorFilter ? { flavor: flavorFilter } : undefined} />
     </div>
   );
 }

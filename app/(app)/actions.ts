@@ -1,14 +1,8 @@
 "use server";
 
 import { createAdminClient } from "@/app/lib/supabase/admin";
-import { createClient } from "@/app/lib/supabase/server";
+import { getCurrentUserId } from "@/app/lib/auth";
 import { revalidatePath } from "next/cache";
-
-async function getCurrentUserId() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id ?? null;
-}
 
 export async function createFlavor(formData: FormData) {
   const slug = formData.get("slug") as string;
