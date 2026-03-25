@@ -1,20 +1,29 @@
 "use server";
 
 import { createAdminClient } from "@/app/lib/supabase/admin";
+import { createClient } from "@/app/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+
+async function getCurrentUserId() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
 
 export async function updateFlavorDetail(formData: FormData) {
   const id = Number(formData.get("id"));
   const slug = formData.get("slug") as string;
   const description = (formData.get("description") as string) || null;
+  const userId = await getCurrentUserId();
 
   const supabase = createAdminClient();
-  await supabase.from("humor_flavors").update({ slug, description }).eq("id", id);
+  await supabase.from("humor_flavors").update({ slug, description, modified_by_user_id: userId }).eq("id", id);
   revalidatePath(`/flavors/${id}`);
 }
 
 export async function createStep(formData: FormData) {
   const flavorId = Number(formData.get("humor_flavor_id"));
+  const userId = await getCurrentUserId();
 
   const supabase = createAdminClient();
 
@@ -40,6 +49,8 @@ export async function createStep(formData: FormData) {
     llm_system_prompt: formData.get("llm_system_prompt") as string,
     llm_user_prompt: formData.get("llm_user_prompt") as string,
     description: (formData.get("description") as string) || null,
+    created_by_user_id: userId,
+    modified_by_user_id: userId,
   });
 
   revalidatePath(`/flavors/${flavorId}`);
@@ -48,6 +59,7 @@ export async function createStep(formData: FormData) {
 export async function updateStep(formData: FormData) {
   const id = Number(formData.get("id"));
   const flavorId = Number(formData.get("humor_flavor_id"));
+  const userId = await getCurrentUserId();
 
   const supabase = createAdminClient();
   await supabase
@@ -61,6 +73,7 @@ export async function updateStep(formData: FormData) {
       llm_system_prompt: formData.get("llm_system_prompt") as string,
       llm_user_prompt: formData.get("llm_user_prompt") as string,
       description: (formData.get("description") as string) || null,
+      modified_by_user_id: userId,
     })
     .eq("id", id);
 
@@ -70,6 +83,7 @@ export async function updateStep(formData: FormData) {
 export async function deleteStep(formData: FormData) {
   const id = Number(formData.get("id"));
   const flavorId = Number(formData.get("humor_flavor_id"));
+  const userId = await getCurrentUserId();
 
   const supabase = createAdminClient();
   await supabase.from("humor_flavor_steps").delete().eq("id", id);
@@ -85,7 +99,7 @@ export async function deleteStep(formData: FormData) {
     for (let i = 0; i < remaining.length; i++) {
       await supabase
         .from("humor_flavor_steps")
-        .update({ order_by: i + 1 })
+        .update({ order_by: i + 1, modified_by_user_id: userId })
         .eq("id", remaining[i].id);
     }
   }
@@ -94,12 +108,13 @@ export async function deleteStep(formData: FormData) {
 }
 
 export async function reorderSteps(flavorId: number, orderedStepIds: number[]) {
+  const userId = await getCurrentUserId();
   const supabase = createAdminClient();
 
   for (let i = 0; i < orderedStepIds.length; i++) {
     await supabase
       .from("humor_flavor_steps")
-      .update({ order_by: i + 1 })
+      .update({ order_by: i + 1, modified_by_user_id: userId })
       .eq("id", orderedStepIds[i]);
   }
 

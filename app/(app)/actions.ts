@@ -1,16 +1,24 @@
 "use server";
 
 import { createAdminClient } from "@/app/lib/supabase/admin";
+import { createClient } from "@/app/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+
+async function getCurrentUserId() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
 
 export async function createFlavor(formData: FormData) {
   const slug = formData.get("slug") as string;
   const description = (formData.get("description") as string) || null;
+  const userId = await getCurrentUserId();
 
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("humor_flavors")
-    .insert({ slug, description });
+    .insert({ slug, description, created_by_user_id: userId, modified_by_user_id: userId });
 
   if (error) console.error("Failed to create flavor:", error.message);
   revalidatePath("/");
@@ -20,11 +28,12 @@ export async function updateFlavor(formData: FormData) {
   const id = Number(formData.get("id"));
   const slug = formData.get("slug") as string;
   const description = (formData.get("description") as string) || null;
+  const userId = await getCurrentUserId();
 
   const supabase = createAdminClient();
   await supabase
     .from("humor_flavors")
-    .update({ slug, description })
+    .update({ slug, description, modified_by_user_id: userId })
     .eq("id", id);
   revalidatePath("/");
 }
@@ -38,6 +47,7 @@ export async function deleteFlavor(formData: FormData) {
 
 export async function duplicateFlavor(formData: FormData) {
   const id = Number(formData.get("id"));
+  const userId = await getCurrentUserId();
   const supabase = createAdminClient();
 
   // Fetch original flavor
@@ -51,7 +61,7 @@ export async function duplicateFlavor(formData: FormData) {
   // Insert copy
   const { data: newFlavor } = await supabase
     .from("humor_flavors")
-    .insert({ slug: `${original.slug}-copy`, description: original.description })
+    .insert({ slug: `${original.slug}-copy`, description: original.description, created_by_user_id: userId, modified_by_user_id: userId })
     .select("id")
     .single();
   if (!newFlavor) return;
@@ -67,6 +77,8 @@ export async function duplicateFlavor(formData: FormData) {
     const copies = steps.map((s) => ({
       ...s,
       humor_flavor_id: newFlavor.id,
+      created_by_user_id: userId,
+      modified_by_user_id: userId,
     }));
     await supabase.from("humor_flavor_steps").insert(copies);
   }
