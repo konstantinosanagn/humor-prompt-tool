@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "images.almostcrackd.ai" },
+      { protocol: "https", hostname: "presigned-url-uploads.almostcrackd.ai" },
+    ],
+  },
 };
 
 export default nextConfig;
