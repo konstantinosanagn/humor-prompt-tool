@@ -2,16 +2,74 @@
 
 ## Overview
 
-A Next.js 16 application for managing humor flavors and their prompt pipelines. Authenticated users (superadmin or matrix_admin) can create, edit, delete, and reorder humor flavor steps, test flavors against image sets via the REST API, and view generated captions. Supports dark/light/system theme.
+A Next.js 16 application for managing humor flavors and their prompt pipelines. Authenticated users (superadmin or matrix_admin) can create, edit, delete, and reorder humor flavor steps, test flavors against image sets via the REST API, and view generated captions. Supports dark/light/system theme. **Neobrutalism aesthetic** via RetroUI component library.
 
 ## Tech Stack
 
 - **Next.js 16.2.1** (App Router)
 - **React 19**
 - **Tailwind CSS v4**
+- **RetroUI** (`pixel-retroui`) — neobrutalism-styled React + Tailwind component library (shadcn-based)
 - **Supabase** (`@supabase/ssr` + `@supabase/supabase-js`) — same instance as humor-admin/humor-proj
 - **`@dnd-kit/core` + `@dnd-kit/sortable`** — drag-and-drop step reordering
-- No other UI libraries
+- **`class-variance-authority`** — required by RetroUI for component variants
+
+## UI Design: Neobrutalism
+
+### Aesthetic
+- **Bold black borders** (2-3px) on all interactive elements
+- **Hard drop shadows** (offset solid black, no blur)
+- **Flat, saturated colors** — minimal palette
+- **Chunky typography** — Archivo Black (headings) + Space Grotesk (body)
+- **No rounded corners** (radius: 0) or minimal rounding
+- **High contrast** — black on white/color, white on black in dark mode
+
+### Color Palette (Minimal)
+```css
+:root {
+  --radius: 0;
+  --background: #ffffff;
+  --foreground: #000000;
+  --primary: #ffdb33;        /* yellow — primary actions */
+  --primary-hover: #ffcc00;
+  --secondary: #000000;      /* black — secondary elements */
+  --border: #000000;         /* hard black borders */
+  --accent-red: #ff6b6b;     /* delete/error */
+  --accent-green: #51cf66;   /* success */
+  --accent-blue: #339af0;    /* info/links */
+}
+
+.dark {
+  --background: #1a1a1a;
+  --foreground: #f5f5f5;
+  --primary: #ffdb33;
+  --primary-hover: #ffcc00;
+  --secondary: #3a3a3a;
+  --border: #f5f5f5;         /* white borders in dark mode */
+  --accent-red: #ff6b6b;
+  --accent-green: #51cf66;
+  --accent-blue: #74c0fc;
+}
+```
+
+### RetroUI Setup
+1. Initialize shadcn: `npx shadcn@latest init`
+2. Add RetroUI utils: `npx shadcn@latest add https://retroui.dev/r/utils.json`
+3. Install components via: `npx shadcn@latest add 'https://retroui.dev/r/{component}.json'`
+4. Install CVA: `npm install class-variance-authority`
+5. Fonts: Archivo Black (headings) + Space Grotesk (body) via `next/font/google`
+
+### Component Mapping
+| App Need | RetroUI Component |
+|---|---|
+| Action buttons | `Button` (primary/outline variants) |
+| Form inputs | `Input`, `Textarea` |
+| Step cards | `Accordion` with custom styling |
+| Status indicators | `Badge` (solid/outlined variants) |
+| User avatar | `Avatar` |
+| Notifications | `Alert` |
+| Modals/dialogs | Custom with neobrutalism border + shadow styling |
+| Tables | Custom with hard borders and alternating row colors |
 
 ## Authentication & Authorization
 
@@ -184,42 +242,14 @@ app/
 
 ## Theme System
 
-### CSS Variables Approach
-```css
-:root {
-  --bg: #f8f9fa;
-  --surface: #ffffff;
-  --surface-hover: #f1f3f5;
-  --border: #e9ecef;
-  --text: #1a1a1a;
-  --text-secondary: #6c757d;
-  --text-muted: #adb5bd;
-  --accent: #7c5cfc;
-  --accent-light: rgba(124, 92, 252, 0.1);
-  --accent-green: #2d8a56;
-  --accent-red: #dc3545;
-}
-
-.dark {
-  --bg: #0f0f0f;
-  --surface: #1a1a1a;
-  --surface-hover: #242424;
-  --border: #2d2d2d;
-  --text: #e8e8e8;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --accent: #9b7dff;
-  --accent-light: rgba(155, 125, 255, 0.15);
-  --accent-green: #34d399;
-  --accent-red: #f87171;
-}
-```
+CSS variables are defined in the Color Palette section above (under UI Design: Neobrutalism).
 
 ### Theme Provider
 - Client component reads localStorage `theme` preference
 - Applies `dark` class to `<html>` element
 - Three options: Light, Dark, System (uses `prefers-color-scheme` media query)
-- Toggle in sidebar footer
+- Toggle in sidebar — styled as a neobrutalism pill with hard border + shadow
+- Shadows use `--shadow-sm: 2px 2px 0 0 var(--border)` and `--shadow-xs: 1px 1px 0 0 var(--border)`
 
 ## REST API Integration
 
